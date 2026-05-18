@@ -27,6 +27,12 @@ async function run() {
     const db = client.db("aimarena")
     const facilityCollection = db.collection("facilities")
 
+    //get all facility
+    app.get("/facilities", async(req, res)=>{
+      const result = await facilityCollection.find().toArray()
+      res.send(result)
+    })
+
     app.post("/facilities", async(req, res)=>{
         const facilities = req.body
         const result = await facilityCollection.insertOne(facilities)
