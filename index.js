@@ -26,6 +26,7 @@ async function run() {
 
     const db = client.db("aimarena")
     const facilityCollection = db.collection("facilities")
+    const bookingCollection = db.collection("bookings")
 
     //get all facility
     app.get("/facilities", async(req, res)=>{
@@ -44,6 +45,13 @@ async function run() {
       const {id} = req.params
       const result = await facilityCollection.findOne({_id: new ObjectId(id)})
       res.send(result)
+    })
+
+    //for posting booking data
+    app.post("/bookings", async(req, res)=>{
+         const bookingData = req.body;
+         const result = await bookingCollection.insertOne(bookingData)
+         res.send(result)
     })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
