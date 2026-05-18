@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 const cors = require('cors')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const dotenv = require('dotenv')
 dotenv.config()
 const uri = process.env.MONGO_URI
@@ -37,6 +37,13 @@ async function run() {
         const facilities = req.body
         const result = await facilityCollection.insertOne(facilities)
         res.send(result)
+    })
+
+    //get details
+    app.get("/facilities/:id", async(req, res)=>{
+      const {id} = req.params
+      const result = await facilityCollection.findOne({_id: new ObjectId(id)})
+      res.send(result)
     })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
