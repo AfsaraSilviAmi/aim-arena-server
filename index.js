@@ -47,12 +47,33 @@ async function run() {
       res.send(result)
     })
 
+    //getting booking data
+    app.get("/bookings/:userId", async(req, res)=>{
+      const {userId} = req.params
+      const result = await bookingCollection.find({userId:userId}).toArray()
+      res.send(result)
+    })
     //for posting booking data
     app.post("/bookings", async(req, res)=>{
          const bookingData = req.body;
          const result = await bookingCollection.insertOne(bookingData)
          res.send(result)
     })
+    //deleting booking data
+    app.delete("/bookings/:bookingId", async(req, res)=>{
+      const {bookingId} = req.params
+      const result = await bookingCollection.deleteOne({_id: new ObjectId(bookingId)})
+      res.send(result)
+    })
+
+    //getting owner facility
+    app.get("/my-facilities/:email", async(req, res)=>{
+      const {email} = req.params
+      const result = await facilityCollection.find({ownerEmail: email}).toArray()
+      res.send(result)
+    })
+    //deleting facility
+  
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
