@@ -2,7 +2,8 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const dotenv = require('dotenv')
+const dotenv = require('dotenv');
+const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 dotenv.config()
 const uri = process.env.MONGO_URI
 const port = process.env.PORT
@@ -17,7 +18,29 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+const JWKS = createRemoteJWKSet(
+  new URL(`http://localhost:3000/api/auth/jwks`)
+)
 
+const verifyToken = async(req, res, next) =>{
+  const authHeader = req?.headers.authorization
+   if(!authHeader){
+    return res.status(401).json({message: "Unauthorized"})
+  }
+
+  const token = authHeader.split(" ")[1]
+  if(!token){
+    return res.status(401).json({message: "Unauthorized"})
+  }
+  try{
+    const {payload} = await jwtVerify(token, JWKS)
+    next()
+  }catch(error){
+    return res.status(403).json({message: "Forbidden"})
+
+  }
+
+}
 async function run() {
   try {
 
@@ -46,46 +69,46 @@ async function run() {
       res.send(result)
     })
 
-    app.post("/facilities", async(req, res)=>{
+    app.post("/facilities", verifyToken, async(req, res)=>{
         const facilities = req.body
         const result = await facilityCollection.insertOne(facilities)
         res.send(result)
     })
 
     //get details
-    app.get("/facilities/:id", async(req, res)=>{
+    app.get("/facilities/:id", verifyToken, async(req, res)=>{
       const {id} = req.params
       const result = await facilityCollection.findOne({_id: new ObjectId(id)})
       res.send(result)
     })
 
     //getting booking data
-    app.get("/bookings/:userId", async(req, res)=>{
+    app.get("/bookings/:userId", verifyToken, async(req, res)=>{
       const {userId} = req.params
       const result = await bookingCollection.find({userId:userId}).toArray()
       res.send(result)
     })
     //for posting booking data
-    app.post("/bookings", async(req, res)=>{
+    app.post("/bookings", verifyToken, async(req, res)=>{
          const bookingData = req.body;
          const result = await bookingCollection.insertOne(bookingData)
          res.send(result)
     })
     //deleting booking data
-    app.delete("/bookings/:bookingId", async(req, res)=>{
+    app.delete("/bookings/:bookingId", verifyToken, async(req, res)=>{
       const {bookingId} = req.params
       const result = await bookingCollection.deleteOne({_id: new ObjectId(bookingId)})
       res.send(result)
     })
 
     //getting owner facility
-    app.get("/my-facilities/:email", async(req, res)=>{
+    app.get("/my-facilities/:email", verifyToken, async(req, res)=>{
       const {email} = req.params
       const result = await facilityCollection.find({ownerEmail: email}).toArray()
       res.send(result)
     })
     //deleting facility
-     app.delete("/facilities/:id", async(req, res)=>{
+     app.delete("/facilities/:id", verifyToken, async(req, res)=>{
       const {id} = req.params
       const result = await facilityCollection.deleteOne({_id: new ObjectId(id)})
       res.send(result)
@@ -93,7 +116,7 @@ async function run() {
      })
 
      //update facility
-     app.patch("/facilities/:id", async(req, res)=>{
+     app.patch("/facilities/:id", verifyToken, async(req, res)=>{
       const {id} = req.params
       const updatedData = req.body
       const result = await facilityCollection.updateOne({_id: new ObjectId(id)},
