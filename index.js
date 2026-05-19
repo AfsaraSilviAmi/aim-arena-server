@@ -27,7 +27,11 @@ async function run() {
     const db = client.db("aimarena")
     const facilityCollection = db.collection("facilities")
     const bookingCollection = db.collection("bookings")
-
+   //featured cards
+   app.get("/featured", async(req, res)=>{
+     const result = await facilityCollection.find().limit(6).toArray()
+     res.send(result)
+   })
     //get all facility
     app.get("/facilities", async(req, res)=>{
       const result = await facilityCollection.find().toArray()
