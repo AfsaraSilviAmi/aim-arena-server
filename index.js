@@ -34,7 +34,15 @@ async function run() {
    })
     //get all facility
     app.get("/facilities", async(req, res)=>{
-      const result = await facilityCollection.find().toArray()
+      const {search, type} = req.query
+      let query = {}
+      if(search){
+        query.facilityName = {$regex: search, $options: "i"}
+      }
+      if(type){
+        query.type = type
+      }
+      const result = await facilityCollection.find(query).toArray()
       res.send(result)
     })
 
